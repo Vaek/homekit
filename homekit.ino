@@ -23,6 +23,7 @@
 #include <Arduino.h>
 #include <arduino_homekit_server.h>
 #include "wifi_info.h"
+#include "led_strip.h"
 
 #define LOG_D(fmt, ...)   printf_P(PSTR(fmt "\n") , ##__VA_ARGS__);
 
@@ -31,10 +32,12 @@ void setup() {
 	wifi_connect(); // in wifi_info.h
 	//homekit_storage_reset(); // to remove the previous HomeKit pairing storage when you first run this new HomeKit example
 	my_homekit_setup();
+  led_setup();
 }
 
 void loop() {
 	my_homekit_loop();
+  led_loop();
 	delay(10);
 }
 
@@ -48,19 +51,20 @@ extern "C" homekit_characteristic_t cha_switch_on;
 
 static uint32_t next_heap_millis = 0;
 
-#define PIN_SWITCH 2
+// #define PIN_SWITCH LED_BUILTIN
 
 //Called when the switch value is changed by iOS Home APP
 void cha_switch_on_setter(const homekit_value_t value) {
 	bool on = value.bool_value;
 	cha_switch_on.value.bool_value = on;	//sync the value
 	LOG_D("Switch: %s", on ? "ON" : "OFF");
-	digitalWrite(PIN_SWITCH, on ? LOW : HIGH);
+  on ? led_on() : led_off();
+	// digitalWrite(PIN_SWITCH, on ? LOW : HIGH);
 }
 
 void my_homekit_setup() {
-	pinMode(PIN_SWITCH, OUTPUT);
-	digitalWrite(PIN_SWITCH, HIGH);
+	// pinMode(PIN_SWITCH, OUTPUT);
+	// digitalWrite(PIN_SWITCH, HIGH);
 
 	//Add the .setter function to get the switch-event sent from iOS Home APP.
 	//The .setter should be added before arduino_homekit_setup.
